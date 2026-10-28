@@ -1,0 +1,76 @@
+# docker-compose.yml – 81 Logan Raspberry Pi 5 homelab
+# Replaces all manual `docker run` commands.
+# Usage:
+#   docker compose up -d           # start everything
+#   docker compose logs -f rtlamr  # follow rtlamr logs
+#   docker compose restart rtlamr  # restart just rtlamr
+
+version: "3.9"
+
+services:
+
+  # ── Mosquitto MQTT broker ──────────────────────────────────────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"   # WebSocket (optional)
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
+  # ── Home Assistant ─────────────────────────────────────────────────────────
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    privileged: true
+    network_mode: host          # required for mDNS / auto-discovery
+    environment:
+      TZ: America/Toronto
+    volumes:
+      - /home/ben/homeassistant:/config
+    depends_on:
+      - mosquitto
+
+  # ── rtlamr2mqtt (NOT in production use — see scripts/rtlamr_mqtt.py) ───────
+  # This was a migration attempt that was never cut over. The gas meter is
+  # actually read by the native systemd services rtl_tcp.service + rtlamr.service
+  # (scripts/systemd/) running scripts/rtlamr_mqtt.py directly on the Pi.
+  # Both this container and the systemd services claim the same RTL-SDR dongle
+  # exclusively — running both at once breaks the real pipeline. Confirmed
+  # 2026-10-28: starting this container caused "Signal caught, exiting!" /
+  # USB resets on the systemd rtl_tcp.service. Left here only for reference
+  # in case the migration is ever finished; do not `docker compose up` this
+  # service while rtlamr.service/rtl_tcp.service are enabled on the Pi.
+  # rtlamr:
+  #   image: allangood/rtlamr2mqtt:latest
+  #   container_name: rtlamr
+  #   restart: unless-stopped
+  #   privileged: true
+  #   devices:
+  #     - /dev/bus/usb:/dev/bus/usb
+  #   volumes:
+  #     - /home/ben/rtlamr/config.yml:/etc/rtlamr2mqtt.yaml:ro
+  #   depends_on:
+  #     - mosquitto
+
+  # ── ESPHome (optional – for compiling CloudFree SLWF-01Pro firmware) ───────
+  esphome:
+    image: esphome/esphome:latest
+    container_name: esphome
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: America/Toronto
+    volumes:
+      - /home/ben/esphome:/config
+    depends_on:
+      - homeassistant
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:

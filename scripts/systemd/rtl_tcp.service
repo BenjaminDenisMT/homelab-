@@ -1,0 +1,11 @@
+[Unit]
+Description=rtl_tcp spectrum server
+After=network.target
+[Service]
+ExecStartPre=-/usr/bin/pkill -9 -f '^/usr/bin/rtl_tcp$'
+ExecStart=/usr/bin/rtl_tcp
+Restart=always
+RestartSec=5
+User=ben
+[Install]
+WantedBy=multi-user.target

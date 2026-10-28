@@ -1,0 +1,43 @@
+# rtlamr2mqtt configuration – 81 Logan
+# Symlink or copy this to /home/ben/rtlamr/config.yml on the Pi
+# Docs: https://github.com/allangood/rtlamr2mqtt
+#
+# NOTE: this matches the schema used by rtlamr2mqtt 2026.5.9 (meters:/
+# custom_field_settings:), which differs from the older devices:/base_topic
+# schema this file used to have. Pulled from the live Pi on 2026-10-28 —
+# deploy.sh only symlinks this file if /home/ben/rtlamr/config.yml doesn't
+# already exist, so it had drifted out of sync with the repo.
+
+general:
+  # Seconds to sleep between rtl_tcp/rtlamr restart cycles.
+  sleep_for: 10
+  verbosity: info            # quiet|info|debug
+  # Periodically restart rtl_tcp — works around it hanging on this Pi (ARM64).
+  tickle_rtl_tcp: true
+
+mqtt:
+  host: 192.168.1.23        # Mosquitto broker (Pi static IP)
+  port: 1883
+  username: ""
+  password: ""
+
+custom_field_settings:
+  Consumption:
+    multiplier: 0.001
+
+custom_parameters:
+  # Default is 2048000. Lowered after confirming the Pi 5 can't keep up
+  # with rtl_tcp at full rate even for a single scm+ filter (constant
+  # "not keeping up with rtl_tcp" errors in journalctl since at least
+  # September — pre-existing, not caused by the Oct 17 IP change).
+  rtltcp: "-s 1024000"
+
+meters:
+  - id: 1279204985          # Itron 100G DLS serial number
+    protocol: scm+           # SCM+ = 10-digit Itron protocol
+    # DO NOT add other protocols (scm, idm, netidm, r900) here.
+    # The Pi ARM64 cannot keep up with rtl_tcp when decoding 4 protocols
+    # simultaneously at 2.048 MSps → "not keeping up with rtl_tcp" crash.
+    name: energir_gas
+    unit_of_measurement: m³
+    icon: mdi:fire

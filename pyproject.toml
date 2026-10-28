@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "homelab"
+version = "0.1.0"
+description = "81 Logan – Raspberry Pi 5 homelab management"
+requires-python = ">=3.11"
+dependencies = [
+    "paho-mqtt>=2.1",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "typer>=0.12",
+    "rich>=13.0",
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "pytest", "pytest-asyncio"]
+
+[project.scripts]
+homelab = "homelab.cli.main:app"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

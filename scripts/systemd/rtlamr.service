@@ -1,0 +1,14 @@
+[Unit]
+Description=RTLAMR Gas Meter to MQTT
+After=network.target mosquitto.service rtl_tcp.service
+Requires=rtl_tcp.service
+
+[Service]
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/python3 /home/ben/rtlamr_mqtt.py
+Restart=always
+RestartSec=30
+User=ben
+
+[Install]
+WantedBy=multi-user.target

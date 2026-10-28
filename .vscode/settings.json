@@ -1,0 +1,9 @@
+{
+  "terminal.integrated.profiles.windows": {
+    "Raspberry Pi": {
+      "path": "C:\\Windows\\System32\\wsl.exe",
+      "args": ["-d", "Ubuntu", "--", "ssh", "-i", "~/.ssh/id_ed25519", "ben@192.168.1.23"],
+      "icon": "server-environment"
+    }
+  }
+}
